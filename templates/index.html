@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #4b6cb7, #182848);
+        }
+
+        .container {
+            position: relative;
+            width: 400px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .forms-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .login-register {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            transition: all 0.6s ease-in-out;
+        }
+
+        .login {
+            z-index: 2;
+        }
+
+        .register {
+            z-index: 1;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .container.active .login {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .container.active .register {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .input-field {
+            width: 100%;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            outline: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .input-field input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: #4b6cb7;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #182848;
+        }
+
+        .toggle-container {
+            position: relative;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .password-error {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(46, 213, 115, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: none;
+            z-index: 100;
+        }
+
+        .error-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(235, 77, 75, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="forms-container">
+            <div class="login-register login">
+                <h1>Login</h1>
+                <form id="login-form">
+                    {% csrf_token %}
+                    <div class="input-field">
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    <button class="btn" type="submit">Login</button>
+                </form>
+                <div class="toggle-container">
+                    <p>Don't have an account? <button class="toggle-btn" id="register-toggle">Register</button></p>
+                </div>
+            </div>
+            <div class="login-register register">
+                <h1>Register</h1>
+                <form id="register-form">
+                    {% csrf_token %}
+                    <div class="input-field">
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="email" name="email" placeholder="Email" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" id="password" placeholder="Password" required>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required>
+                        <p class="password-error" id="password-error">Passwords do not match!</p>
+                    </div>
+                    <button class="btn" type="submit">Register</button>
+                </form>
+                <div class="toggle-container">
+                    <p>Already have an account? <button class="toggle-btn" id="login-toggle">Login</button></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-message" id="success-message"></div>
+    <div class="error-message" id="error-message"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const registerToggle = document.getElementById('register-toggle');
+            const loginToggle = document.getElementById('login-toggle');
+            const registerForm = document.getElementById('register-form');
+            const loginForm = document.getElementById('login-form');
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirm_password');
+            const passwordError = document.getElementById('password-error');
+            const successMessage = document.getElementById('success-message');
+            const errorMessage = document.getElementById('error-message');
+
+            registerToggle.addEventListener('click', () => {
+                container.classList.add('active');
+            });
+
+            loginToggle.addEventListener('click', () => {
+                container.classList.remove('active');
+            });
+
+            confirmPassword.addEventListener('input', function() {
+                if (password.value !== confirmPassword.value) {
+                    passwordError.style.display = 'block';
+                } else {
+                    passwordError.style.display = 'none';
+                }
+            });
+
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (password.value !== confirmPassword.value) {
+                    passwordError.style.display = 'block';
+                    return;
+                }
+
+                const formData = new FormData(registerForm);
+
+                fetch('/register/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage(successMessage, 'Registration successful! You can now login.');
+                        registerForm.reset();
+                        container.classList.remove('active');
+                    } else {
+                        showMessage(errorMessage, data.message || 'Registration failed. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    showMessage(errorMessage, 'An error occurred. Please try again later.');
+                    console.error('Error:', error);
+                });
+            });
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(loginForm);
+                fetch('/login/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage(successMessage, 'Login successful! Redirecting...');
+                        localStorage.setItem('user', JSON.stringify({
+                            username: formData.get('username'),
+                            isLoggedIn: true
+                        }));
+                        setTimeout(() => {
+                            window.location.href = '/dashboard/';
+                        }, 1500);
+                    } else {
+                        showMessage(errorMessage, 'Username or password is wrong.');
+                    }
+                })
+                .catch(error => {
+                    showMessage(errorMessage, 'An error occurred. Please try again later.');
+                    console.error('Error:', error);
+                });
+            });
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            function showMessage(element, message) {
+                element.textContent = message;
+                element.style.display = 'block';
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
