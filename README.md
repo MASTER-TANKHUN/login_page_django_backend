@@ -14,9 +14,9 @@ A secure and stylish user authentication system built with Django, featuring an 
 
 ## Screenshots
 
-![Login Screen](screen_readme\Login.png "Login Screen")
-![Register Screen](screen_readme\Register.png "Register Screen")
-![Dashboard](screen_readme\dashboard.png "Dashboard")
+![Login Screen](screen_readme/Login.png "Login Screen")
+![Register Screen](screen_readme/Register.png "Register Screen")
+![Dashboard](screen_readme/dashboard.png "Dashboard")
 
 ## Installation
 
